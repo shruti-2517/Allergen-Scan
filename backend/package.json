@@ -1,0 +1,21 @@
+{
+  "name": "allergenic-be",
+  "version": "1.0.0",
+  "description": "This is Allergenic Backend",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app"
+  },
+  "author": "Shruti Patel",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.17.0",
+    "randomstring": "^1.3.1"
+  }
+}
