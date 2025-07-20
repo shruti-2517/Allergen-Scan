@@ -1,5 +1,5 @@
 import { Card, Container } from 'react-bootstrap'
-import MyNavbar from '../components/navbar'
+import MyNavbar from '../components/mynavbar'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import authFetch from './authFetch'
@@ -15,23 +15,37 @@ export default function Info() {
 
     async function fetchProduct() {
         const res = await authFetch(`/info/${barcode}`)
+        if (res.status == 400) {
+            console.log(res.error)
+        }
         const data = await res.json()
         setProduct(data)
+
     }
 
     if (!product) return <div>Loading...</div>
 
     return (
-        <div>
+        <div style={{ minHeight: '100dvh', backgroundColor: '#fff' }}>
             <MyNavbar />
 
             <Container className="mt-4 d-flex justify-content-center">
                 <Card style={{ width: '320px', borderRadius: '15px', border: '1px solid #333', padding: '10px', fontSize: '1rem', fontWeight: '400' }}>
                     <Card.Body>
+                        {product.image_url && (
+                            <div className="text-center mb-3">
+                                <img
+                                    src={product.image_url}
+                                    alt={product.product_name}
+                                    style={{ maxHeight: '150px', objectFit: 'contain' }}
+                                />
+                            </div>
+                        )}
 
                         <Card.Title className="text-center mb-3" style={{ backgroundColor: '#d6b2d6', borderRadius: '8px', padding: '5px', fontSize: '1.2rem' }}>
                             {product.product_name || "Unknown Product"}
                         </Card.Title>
+
 
                         <p className="mb-2"><strong>Barcode:</strong> {product.product_barcode || 'N/A'}</p>
 
@@ -49,7 +63,7 @@ export default function Info() {
                         <hr />
 
                         <p className="mb-1"><strong>Matched Allergens:</strong></p>
-                        <ul className="list-unstyled mb-2" style={{ fontSize: '0.9rem' }}>
+                        {product.foundAllergens.length > 0 && <ul className="list-unstyled mb-2" style={{ fontSize: '0.9rem' }}>
                             {(expandAllergens ? product.foundAllergens : product.foundAllergens?.slice(0, VISIBLE_COUNT))?.map((a, i) => (
                                 <li key={i}>• {a}</li>
                             ))}
@@ -72,6 +86,8 @@ export default function Info() {
                                 </li>
                             )}
                         </ul>
+                        }
+                        {product.foundAllergens.length == 0 && <p>None</p>}
 
                         <p className="mb-1"><strong>Ingredients:</strong></p>
                         <ul className="list-unstyled mb-2" style={{ fontSize: '0.9rem' }}>

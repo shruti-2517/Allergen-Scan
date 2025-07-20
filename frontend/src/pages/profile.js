@@ -1,6 +1,6 @@
 import { Card, Button, Container, Row, Col, Dropdown, ListGroup } from 'react-bootstrap'
 import { useState, useEffect, useRef } from 'react'
-import MyNavbar from '../components/navbar'
+import MyNavbar from '../components/mynavbar'
 import authFetch from './authFetch.js'
 import { FaPlus, FaMinus } from 'react-icons/fa'
 

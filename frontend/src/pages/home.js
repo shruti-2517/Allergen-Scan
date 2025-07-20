@@ -4,6 +4,7 @@ import { useSwipeable } from 'react-swipeable';
 import { useNavigate } from 'react-router-dom';
 import authFetch from './authFetch.js'
 import { Html5Qrcode } from "html5-qrcode";
+import MyNavbar from '../components/mynavbar'
 
 export default function Home() {
     const navigate = useNavigate()
@@ -35,20 +36,18 @@ export default function Home() {
     useEffect(() => {
         async function fetchRecents() {
             try {
-                const res = await authFetch(`/recents`)
+                const res = await authFetch("/recents")
                 const data = await res.json()
                 if (res.status == 200) {
-                    console.log(Array.isArray(data))
-                    console.log("Length:", data.length)
                     console.log(data)
                     setRecents(data)
-                } else {
-                    setErrorMessage("Failed to load recents")
+                    setLoadingRecents(true)
+                }
+                else {
+                    setLoadingRecents(false)
                 }
             } catch (err) {
                 setErrorMessage("Network error while fetching recents")
-            } finally {
-                setLoadingRecents(false)
             }
         }
         fetchRecents()
@@ -96,21 +95,12 @@ export default function Home() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
-            {/* Navbar */}
-            <Navbar className="px-3" style={{ backgroundColor: '#d6b2d6' }}>
-                <Container fluid className="justify-content-between align-items-center">
-                    <Navbar.Brand className="fw-bold fs-5">Allergenic</Navbar.Brand>
-                    <div className="d-flex align-items-center gap-3">
-                        <a className="nav-link text-dark" onClick={() => { navigate("/history") }}>History</a>
-                        <Button variant="outline-dark" size="sm" onClick={() => { navigate("/login") }}>Sign In/Up</Button>
-                        <i className="bi bi-person-circle fs-1 ms-1" onClick={() => { navigate("/profile") }}></i>
-                    </div>
-                </Container>
-            </Navbar>
+        <div style={{ minHeight: '100dvh', backgroundColor: '#fff' }}>
+
+            <MyNavbar />
 
             {/* Recents */}
-            <Container fluid className="mt-4 px-0 pt-4">
+            {loadingRecents && <Container fluid className="mt-4 px-0 pt-4">
                 <h5 className="text-start ms-3 ps-3 mb-2 pb-2">Recents</h5>
 
                 <div {...handlers} className="position-relative" style={{ height: '155px', overflow: 'hidden' }}>
@@ -121,12 +111,15 @@ export default function Home() {
                                     <Card.Body>
                                         <Card.Title className="d-flex justify-content-between">
                                             <span className="fw-bold">{item.product_name}</span>
-                                            <span className={`fw-bold ${item.safe === 'Safe' ? 'text-success' : 'text-danger'}`}>{item.status}</span>
+                                            <span className={`fw-bold ${item.safe ? 'text-success' : 'text-danger'}`}>
+                                                {item.safe ? 'Safe for you' : 'Unsafe'}
+                                            </span>
+
                                         </Card.Title>
                                         <Card.Text>
                                             Allergens Found: {item.total_allergens}
                                         </Card.Text>
-                                        <Button variant="outline-secondary" size="sm" className="w-100" onClick={() => {navigate(`/info/${recents.product_barcode}`)}}>Detailed Info</Button>
+                                        <Button variant="outline-secondary" size="sm" className="w-100" onClick={() => { navigate(`/info/${item.product_barcode}`) }}>Detailed Info</Button>
                                     </Card.Body>
                                 </Card>
                             </div>
@@ -134,9 +127,8 @@ export default function Home() {
                     </div>
                 </div>
 
-
-            {/* Dots */}
-            <div className="d-flex justify-content-center gap-2 mb-5 pb-5">
+                {/* Dots */}
+                <div className="d-flex justify-content-center gap-2 mb-5 pb-5">
                     {recents.map((_, idx) => (
                         <div key={idx} style={{
                             width: '10px',
@@ -149,6 +141,7 @@ export default function Home() {
                     ))}
                 </div>
             </Container>
+            }
 
             {scanning && <div id="reader" style={{ width: "200px", height: "100px", aspectRatio: "1 / 1", margin: "auto", marginTop: "10px" }} />}
             {scannedCode && <p className="mt-3 text-center">Scanned: <strong>{scannedCode}</strong></p>}
@@ -162,5 +155,5 @@ export default function Home() {
                 </button>
             </div>}
         </div >
-    );
+    )
 }

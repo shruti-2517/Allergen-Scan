@@ -1,7 +1,7 @@
 import { Card, Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import MyNavbar from '../components/navbar'
+import MyNavbar from '../components/mynavbar'
 
 export default function Login() {
     const refEmail = useRef();
@@ -57,22 +57,22 @@ export default function Login() {
                                 <input ref={refPassword} type="password" className="form-control" id="password" required />
                             </Form.Group>
                         </Form>
-                        <Row>
-                            <Col>
-                                <Button variant="light" className="w-100" onClick={handleLogin} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
-                                    Login
-                                </Button>
-                            </Col>
-                            <Col>
-                                <Button variant="light" className="w-100" onClick={() => { navigate("/signup") }} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
-                                    Sign Up
-                                </Button>
-                            </Col>
-                        </Row>
+                        <Button variant="light" className="w-100" onClick={handleLogin} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
+                            Login
+                        </Button>
+                        <p className="text-center mt-3">
+                            Don’t have an account?{" "}
+                            <span
+                                onClick={() => navigate("/signup")}
+                                style={{ color: "#d6b2d6", cursor: "pointer", textDecoration: "underline" }}
+                            >
+                                Sign Up
+                            </span>
+                        </p>
                         <p className="message text-center mt-4">{errorMessage}</p>
                     </Card.Body>
                 </Card>
             </Container>
-        </div>
+        </div >
     );
 }

@@ -1,34 +1,37 @@
 require("dotenv").config()
-const expr = require("express")
+const express = require("express")
 const { MongoClient, Admin, Collection, ObjectId } = require("mongodb")
 const cors = require("cors")
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcrypt")
 const connection = new MongoClient(process.env.CONNECTION_STRING_MONGO)
+
 async function start() {
     await connection.connect()
 }
 start();
 
-const server = expr()
+const server = express()
 server.use(cors())
-server.use(expr.json())
+server.use(express.json())
 server.use(cookieParser())
 
 server.post("/signup", async (req, res) => {
-    //api for sign-up
+
     if (req.body.name && req.body.email && req.body.password) {
         const db = connection.db("ALLERGENIC")
         const collection = db.collection("USERS")
-        const result = await collection.find({ "email": req.body.email }).toArray()
-        if (result.length > 0) {
+        const existingUser = await collection.findOne({ "email": req.body.email })
+        if (existingUser) {
             res.json({ error: "User Already Exists" })
         }
         else {
+            const hashedPassword = await bcrypt.hash(req.body.password, 10)
             await collection.insertOne({
                 name: req.body.name,
                 email: req.body.email,
-                password: req.body.password
+                password: hashedPassword
             })
             res.status(200).json({ message: "User Created" })
         }
@@ -44,9 +47,9 @@ server.post("/login", async (req, res) => {
 
         const db = connection.db("ALLERGENIC")
         const collection = db.collection("USERS")
-        const result = await collection.findOne({ "email": req.body.email, "password": req.body.password })
-
-        if (result) {
+        const result = await collection.findOne({ "email": req.body.email })
+        const isMatch = await bcrypt.compare(req.body.password, result.password)
+        if (result && isMatch) {
             user = { id: result._id }
             const accessToken = generateAccessToken(user)
             const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" })
@@ -57,7 +60,8 @@ server.post("/login", async (req, res) => {
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             const collection2 = db.collection("REFRESH TOKENS")
-            await collection2.insertOne({ token: refreshToken, userId: user.id });
+            await collection2.insertOne({ token: refreshToken, userId: user.id, createdAt: new Date() })
+            collection2.createIndex({ "createdAt": 1 }, { expireAfterSeconds: 604800 })
             res.status(200).json({ accessToken: accessToken });
         }
         else {
@@ -93,7 +97,6 @@ server.delete("/logout", async (req, res) => {
     await collection.deleteOne({ token });
     res.sendStatus(200)
 })
-
 
 server.get("/user/info", authenticateToken, async (req, res) => {
 
@@ -189,9 +192,11 @@ server.get("/info/:barcode", authenticateToken, async (req, res) => {
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("FOOD PRODUCTS")
     const userId = req.user.id
-    const product = await collection.findOne({ "product_barcode": barcode, for_user: userId }, { projection: { for_user: 0 } })
+    console.log(barcode)
+    const product = await collection.find({ "product_barcode": barcode, for_user: userId }, { projection: { for_user: 0 } }).toArray()
+    console.log(product)
     if (product) {
-        res.status(200).json(product)
+        res.status(200).json(product[0])
     }
     else {
         res.status(404).json({ error: "No information about product found" })
@@ -212,11 +217,11 @@ server.get("/recents", authenticateToken, async (req, res) => {
     }
 })
 
-server.get("/info/history", authenticateToken, async (req, res) => {
+server.get("/history", authenticateToken, async (req, res) => {
 
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("FOOD PRODUCTS")
-    const userId = req.user.userId
+    const userId = req.user.id
     const products = await collection.find({ for_user: userId }, { projection: { product_name: 1, product_barcode: 1, total_allergens: 1, safe: 1 } }).sort({ timestamp: -1 }).toArray()
     if (products.length > 0) {
         res.status(200).json(products)
@@ -246,7 +251,6 @@ server.listen(8000, '0.0.0.0', () => {
 })
 
 process.on('SIGINT', async () => {
-    console.log("\nClosing MongoDB connection...")
     await client.close()
     process.exit(0)
 })

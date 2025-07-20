@@ -1,7 +1,7 @@
 import { Card, Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import MyNavbar from '../components/navbar'
+import MyNavbar from '../components/mynavbar'
 
 export default function SignUp() {
     const refName = useRef();
@@ -28,8 +28,7 @@ export default function SignUp() {
             })
         })
         const data = await res.json()
-        if(res.status == 200)
-        {
+        if (res.status == 200) {
             navigate("/profile")
         }
         setErrorMessage(data.message)
@@ -37,7 +36,7 @@ export default function SignUp() {
 
     return (
         <div>
-            
+
             <MyNavbar />
 
             <Container className="d-flex justify-content-center align-items-center" style={{ height: '90vh' }}>
@@ -49,12 +48,12 @@ export default function SignUp() {
                         <Form>
                             <Form.Group controlId="formName" className="mb-3">
                                 <Form.Label>Name</Form.Label>
-                                <input ref={refName} type="text" className="form-control" id ="name" required />
+                                <input ref={refName} type="text" className="form-control" id="name" required />
                             </Form.Group>
 
                             <Form.Group controlId="formEmail" className="mb-3">
                                 <Form.Label>Email</Form.Label>
-                                <input ref={refEmail} type="email" className="form-control" id = "email" required />
+                                <input ref={refEmail} type="email" className="form-control" id="email" required />
                             </Form.Group>
 
                             <Form.Group controlId="formPassword" className="mb-4">
@@ -62,18 +61,19 @@ export default function SignUp() {
                                 <input ref={refPassword} type="password" className="form-control" id="password" required />
                             </Form.Group>
                         </Form>
-                        <Row>
-                            <Col>
-                                <Button variant="light" className="w-100" onClick={handleSignUp} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
-                                    Sign Up
-                                </Button>
-                            </Col>
-                            <Col>
-                                <Button variant="light" className="w-100" onClick={() => {navigate("/login")}} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
-                                    Login
-                                </Button>
-                            </Col>
-                        </Row>
+                        <Button variant="light" className="w-100" onClick={handleSignUp} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
+                            Sign Up
+                        </Button>
+                        <p className="text-center mt-3">
+                            Already have an account?{" "}
+                            <span
+                                onClick={() => navigate("/login")}
+                                style={{ color: "#d6b2d6", cursor: "pointer", textDecoration: "underline" }}
+                            >
+                                Login In
+                            </span>
+                        </p>
+
                         <p className="message text-center mt-4">{errorMessage}</p>
                     </Card.Body>
                 </Card>
