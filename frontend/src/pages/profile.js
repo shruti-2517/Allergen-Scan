@@ -1,4 +1,4 @@
-import { Card, Button, Container, Row, Col, Dropdown, ListGroup } from 'react-bootstrap'
+import { Card, Form, Button, Container, Row, Col, Dropdown, ListGroup } from 'react-bootstrap'
 import { useState, useEffect, useRef } from 'react'
 import MyNavbar from '../components/mynavbar'
 import authFetch from './authFetch.js'
@@ -32,7 +32,7 @@ export default function Profile() {
         previousAllergens.current = allergens
         await authFetch('/update_allergens', {
             method: 'POST',
-            body: JSON.stringify({ Allergens: allergens})
+            body: JSON.stringify({ Allergens: allergens })
         })
     }
 
@@ -66,45 +66,27 @@ export default function Profile() {
                         <p><strong>Email:</strong> {user.email}</p>
 
                         <Card className="mt-4" style={{ borderRadius: '4.9px', border: '1px solid #ccc' }}>
-                            <Card.Header
-                                className="d-flex justify-content-between align-items-center"
-                                style={{ backgroundColor: '#d6b2d6', borderBottom: '1px solid #ccc' }}
-                            >
-                                <span>Allergens</span>
-                                <FaPlus style={{ cursor: 'pointer' }} onClick={() => setShowDropdown(!showDropdown)} />
+                            <Card.Header style={{ backgroundColor: '#d6b2d6', borderBottom: '1px solid #ccc' }}>
+                                <strong>Select Your Allergens</strong>
                             </Card.Header>
-
-                            {showDropdown && (
-                                <div style={{ backgroundColor: '#f8f8f8', borderTop: '1px solid #ccc' }}>
-                                    {ALLERGEN_OPTIONS.map((item) => (
-                                        <div
-                                            key={item}
-                                            onClick={() => handleAddAllergen(item)}
-                                            style={{
-                                                padding: '8px 12px',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid #eee',
-                                                fontSize: '0.9rem'
-                                            }}
-                                        >
-                                            {item}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <ListGroup variant="flush">
-                                {allergens.map((item) => (
-                                    <ListGroup.Item
-                                        key={item}
-                                        className="d-flex justify-content-between align-items-center"
-                                        style={{ fontSize: '0.9rem' }}
+                            <Card.Body>
+                                <Form.Group controlId="allergenSelect">
+                                    <Form.Label>Hold Ctrl (or Cmd) to select multiple</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        multiple
+                                        value={allergens}
+                                        onChange={(e) => {
+                                            const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                            setAllergens(selected);
+                                        }}
                                     >
-                                        {item}
-                                        <FaMinus style={{ cursor: 'pointer', color: 'red' }} onClick={() => handleRemoveAllergen(item)} />
-                                    </ListGroup.Item>
-                                ))}
-                            </ListGroup>
+                                        {ALLERGEN_OPTIONS.map(item => (
+                                            <option key={item} value={item}>{item}</option>
+                                        ))}
+                                    </Form.Control>
+                                </Form.Group>
+                            </Card.Body>
                         </Card>
 
                     </Card.Body>

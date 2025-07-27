@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Navbar, Container, Button, Card } from 'react-bootstrap';
+import { useState, useRef, useEffect } from 'react';
+import { Container, Button, Card } from 'react-bootstrap';
 import { useSwipeable } from 'react-swipeable';
 import { useNavigate } from 'react-router-dom';
 import authFetch from './authFetch.js'
@@ -99,7 +99,6 @@ export default function Home() {
 
             <MyNavbar />
 
-            {/* Recents */}
             {loadingRecents && <Container fluid className="mt-4 px-0 pt-4">
                 <h5 className="text-start ms-3 ps-3 mb-2 pb-2">Recents</h5>
 
@@ -127,7 +126,6 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Dots */}
                 <div className="d-flex justify-content-center gap-2 mb-5 pb-5">
                     {recents.map((_, idx) => (
                         <div key={idx} style={{
@@ -143,10 +141,14 @@ export default function Home() {
             </Container>
             }
 
-            {scanning && <div id="reader" style={{ width: "200px", height: "100px", aspectRatio: "1 / 1", margin: "auto", marginTop: "10px" }} />}
+            {scanning &&
+                <div className="d-flex justify-content-center align-items-center" style={{ height: '25vh' }}>
+                    <div id="reader" style={{ width: "250px", height: "250px", overflow: 'hidden'}} />    
+                </div>
+            }
+
             {scannedCode && <p className="mt-3 text-center">Scanned: <strong>{scannedCode}</strong></p>}
 
-            {/* Camera Button */}
             {!scanning && <div className="d-flex justify-content-center mt-4 pt-4" onClick={() => setScanning(true)}>
                 <button className="btn rounded-circle shadow"
                     style={{ backgroundColor: '#d6b2d6', padding: '20px', width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

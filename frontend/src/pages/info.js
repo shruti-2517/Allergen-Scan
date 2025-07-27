@@ -18,12 +18,14 @@ export default function Info() {
         if (res.status == 400) {
             console.log(res.error)
         }
-        const data = await res.json()
-        setProduct(data)
+        else {
+            const data = await res.json()
+            setProduct(data)
+        }
 
     }
 
-    if (!product) return <div>Loading...</div>
+    if (!product) return <div> </div>
 
     return (
         <div style={{ minHeight: '100dvh', backgroundColor: '#fff' }}>
@@ -50,8 +52,8 @@ export default function Info() {
                         <p className="mb-2"><strong>Barcode:</strong> {product.product_barcode || 'N/A'}</p>
 
                         <p className="mb-2"><strong>Status:</strong>
-                            <span style={{ color: product.safe ? 'green' : 'red', marginLeft: '5px' }}>
-                                {product.safe ? 'Safe for you' : 'Unsafe'}
+                            <span style={{ color: product.safe ? 'green' : 'red', marginLeft: '5px' }}><strong>
+                                {product.safe ? 'Safe for you' : 'Unsafe'}</strong>
                             </span>
                         </p>
 

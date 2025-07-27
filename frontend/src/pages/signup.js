@@ -40,7 +40,7 @@ export default function SignUp() {
             <MyNavbar />
 
             <Container className="d-flex justify-content-center align-items-center" style={{ height: '90vh' }}>
-                <Card style={{ width: '90%', maxWidth: '400px', borderRadius: '15px', border: '1px solid black' }}>
+                <Card style={{ width: '90%', maxWidth: '400px', borderRadius: '17px', border: '1px solid black' }}>
                     <Card.Header className="text-center fw-bold border-bottom" style={{ backgroundColor: 'transparent' }}>
                         Sign Up
                     </Card.Header>
@@ -70,7 +70,7 @@ export default function SignUp() {
                                 onClick={() => navigate("/login")}
                                 style={{ color: "#d6b2d6", cursor: "pointer", textDecoration: "underline" }}
                             >
-                                Login In
+                                Login
                             </span>
                         </p>
 

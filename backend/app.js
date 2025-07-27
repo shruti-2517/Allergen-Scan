@@ -188,13 +188,11 @@ server.get("/add/:barcode", authenticateToken, async (req, res) => {
 
 server.get("/info/:barcode", authenticateToken, async (req, res) => {
 
-    const barcode = req.params.barcode
+    const barcode = Number(req.params.barcode)
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("FOOD PRODUCTS")
     const userId = req.user.id
-    console.log(barcode)
     const product = await collection.find({ "product_barcode": barcode, for_user: userId }, { projection: { for_user: 0 } }).toArray()
-    console.log(product)
     if (product) {
         res.status(200).json(product[0])
     }

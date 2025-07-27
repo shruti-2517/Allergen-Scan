@@ -7,6 +7,7 @@ export default function Login() {
     const refEmail = useRef();
     const refPassword = useRef();
     const [errorMessage, setErrorMessage] = useState();
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate()
 
     // Handles login and sends a POST request to backend
@@ -41,7 +42,7 @@ export default function Login() {
             <MyNavbar />
 
             <Container className="d-flex justify-content-center align-items-center" style={{ height: '90vh' }}>
-                <Card style={{ width: '90%', maxWidth: '400px', borderRadius: '15px', border: '1px solid black' }}>
+                <Card style={{ width: '90%', maxWidth: '400px', borderRadius: '17px', border: '1px solid black' }}>
                     <Card.Header className="text-center fw-bold border-bottom" style={{ backgroundColor: 'transparent' }}>
                         Login
                     </Card.Header>
@@ -61,7 +62,7 @@ export default function Login() {
                             Login
                         </Button>
                         <p className="text-center mt-3">
-                            Don’t have an account?{" "}
+                            Don't have an account?{" "}
                             <span
                                 onClick={() => navigate("/signup")}
                                 style={{ color: "#d6b2d6", cursor: "pointer", textDecoration: "underline" }}
