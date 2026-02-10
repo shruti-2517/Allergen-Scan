@@ -10,6 +10,9 @@ import Login from './pages/login';
 import Info from './pages/info';
 import History from './pages/history';
 import Profile from './pages/profile';
+import IngredientAnalyzer from './pages/ingredientAnalyzer';
+import Dashboard from './pages/dashboard';
+import Settings from './pages/settings';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -22,7 +25,10 @@ root.render(
         <Route path="/signup" element={<SignUp />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/history" element={<History />} />
-        <Route path = "/info/:barcode" element = {<Info />} />
+        <Route path="/info/:barcode" element={<Info />} />
+        <Route path="/analyze" element={<IngredientAnalyzer />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

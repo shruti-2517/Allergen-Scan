@@ -9,9 +9,11 @@ export default async function authFetch(url, options = {}, retry = true) {
         "Authorization": `Bearer ${accessToken}`,
     };
 
+    options.credentials = options.credentials || 'include'
+
     const res = await fetch(url, options)
 
-    if (res.status === 401 || res.status === 403 && retry) {
+    if ((res.status === 401 || res.status === 403) && retry) {
         const tokenRes = await fetch('/token', {
             method: 'POST',
             headers: { "Content-Type": "application/json" },

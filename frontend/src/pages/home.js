@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Container, Button, Card } from 'react-bootstrap';
+import { Container, Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { useSwipeable } from 'react-swipeable';
 import { useNavigate } from 'react-router-dom';
 import authFetch from './authFetch.js'
 import { Html5Qrcode } from "html5-qrcode";
 import MyNavbar from '../components/mynavbar'
+import { FiCamera, FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi';
+import '../styles/home.css';
 
 export default function Home() {
     const navigate = useNavigate()
@@ -32,6 +34,7 @@ export default function Home() {
     const [scannedCode, setScannedCode] = useState("");
     const [scanning, setScanning] = useState(false);
     const [errorMessage, setErrorMessage] = useState();
+    const [scanSuccess, setScanSuccess] = useState(false);
 
     useEffect(() => {
         async function fetchRecents() {
@@ -39,19 +42,25 @@ export default function Home() {
                 const res = await authFetch("/recents")
                 const data = await res.json()
                 if (res.status == 200) {
-                    console.log(data)
                     setRecents(data)
-                    setLoadingRecents(true)
+                    setCurrentIndex(0)
+                    setLoadingRecents(false)
                 }
                 else {
                     setLoadingRecents(false)
                 }
             } catch (err) {
                 setErrorMessage("Network error while fetching recents")
+                setLoadingRecents(false)
             }
         }
         fetchRecents()
     }, [])
+
+    // Reset carousel index whenever recents update
+    useEffect(() => {
+        setCurrentIndex(0)
+    }, [recents])
 
 
     useEffect(() => {
@@ -95,67 +104,148 @@ export default function Home() {
     }
 
     return (
-        <div style={{ minHeight: '100dvh', backgroundColor: '#fff' }}>
-
+        <div className="home-container">
             <MyNavbar />
 
-            {loadingRecents && <Container fluid className="mt-4 px-0 pt-4">
-                <h5 className="text-start ms-3 ps-3 mb-2 pb-2">Recents</h5>
-
-                <div {...handlers} className="position-relative" style={{ height: '155px', overflow: 'hidden' }}>
-                    <div className="d-flex" style={{ transform: `translateX(-${currentIndex * 100}vw)`, width: `${recents.length * 100}vw`, transition: 'transform 0.4s ease' }} >
-                        {recents.map((item, idx) => (
-                            <div key={idx} className="d-flex justify-content-center" style={{ width: '100vw', flexShrink: 0 }}>
-                                <Card style={{ width: '85vw' }}>
-                                    <Card.Body>
-                                        <Card.Title className="d-flex justify-content-between">
-                                            <span className="fw-bold">{item.product_name}</span>
-                                            <span className={`fw-bold ${item.safe ? 'text-success' : 'text-danger'}`}>
-                                                {item.safe ? 'Safe for you' : 'Unsafe'}
-                                            </span>
-
-                                        </Card.Title>
-                                        <Card.Text>
-                                            Allergens Found: {item.total_allergens}
-                                        </Card.Text>
-                                        <Button variant="outline-secondary" size="sm" className="w-100" onClick={() => { navigate(`/info/${item.product_barcode}`) }}>Detailed Info</Button>
-                                    </Card.Body>
-                                </Card>
-                            </div>
-                        ))}
-                    </div>
+            <Container className="home-content">
+                {/* Hero Section */}
+                <div className="hero-section">
+                    <h1 className="hero-title">Scan & Analyze</h1>
+                    <p className="hero-subtitle">Keep yourself safe from allergens</p>
                 </div>
 
-                <div className="d-flex justify-content-center gap-2 mb-5 pb-5">
-                    {recents.map((_, idx) => (
-                        <div key={idx} style={{
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            backgroundColor: currentIndex === idx ? '#d6b2d6' : '#ccc',
-                            transition: 'background-color 0.3s ease',
-                        }}
-                        />
-                    ))}
+                {/* Scanner Button */}
+                <div className="scanner-section">
+                    {!scanning && (
+                        <button 
+                            className="scanner-button"
+                            onClick={() => setScanning(true)}
+                            title="Tap to scan barcode"
+                        >
+                            <FiCamera size={32} />
+                            <span>Scan Barcode</span>
+                        </button>
+                    )}
+
+                    {scanning && (
+                        <div className="scanner-active">
+                            <div className="scanner-header">
+                                <h3>Position barcode in frame</h3>
+                                <button 
+                                    className="close-scanner"
+                                    onClick={() => {
+                                        setScanning(false);
+                                        setErrorMessage(null);
+                                        setScanSuccess(false);
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div id="reader" className="barcode-reader"></div>
+                            {errorMessage && (
+                                <Alert variant="danger" className="mt-3">
+                                    {errorMessage}
+                                </Alert>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Recents Section */}
+                {!loadingRecents && recents.length > 0 && (
+                    <div className="recents-section">
+                        <h2 className="section-title">Recently Scanned</h2>
+                        
+                        <div {...handlers} className="recents-carousel">
+                            <div 
+                                className="carousel-track"
+                                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                            >
+                                {recents.slice(0, 3).map((item, idx) => (
+                                    <div key={item.product_barcode || idx} className="carousel-item">
+                                        <Card className="product-card">
+                                            <Card.Body>
+                                                <div className="card-header-custom">
+                                                    <span className="product-name">{item.product_name}</span>
+                                                    <span className={`status-badge ${item.safe ? 'safe' : 'unsafe'}`}>
+                                                        {item.safe ? '✓ Safe' : '⚠ Unsafe'}
+                                                    </span>
+                                                </div>
+                                                <div className="card-content">
+                                                    <p className="allergen-count">
+                                                        <strong>{item.total_allergens}</strong> allergens found
+                                                    </p>
+                                                    <Button 
+                                                        className="btn-view-details"
+                                                        onClick={() => navigate(`/info/${item.product_barcode}`)}
+                                                    >
+                                                        View Details
+                                                    </Button>
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Carousel Controls */}
+                            {currentIndex > 0 && (
+                                <button 
+                                    className="carousel-control prev"
+                                    onClick={() => setCurrentIndex(currentIndex - 1)}
+                                >
+                                    <FiChevronLeft />
+                                </button>
+                            )}
+                            {currentIndex < Math.min(2, recents.length - 1) && (
+                                <button 
+                                    className="carousel-control next"
+                                    onClick={() => setCurrentIndex(currentIndex + 1)}
+                                >
+                                    <FiChevronRight />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Carousel Indicators */}
+                        <div className="carousel-indicators">
+                            {recents.slice(0, 3).map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    className={`indicator ${currentIndex === idx ? 'active' : ''}`}
+                                    onClick={() => setCurrentIndex(idx)}
+                                    aria-label={`Go to slide ${idx + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Quick Actions */}
+                <div className="quick-actions">
+                    <Row>
+                        <Col xs={6} className="mb-3">
+                            <button 
+                                className="action-card"
+                                onClick={() => navigate("/analyze")}
+                            >
+                                <FiCamera size={32} className="action-icon" />
+                                <div className="action-text">Analyze Image</div>
+                            </button>
+                        </Col>
+                        <Col xs={6} className="mb-3">
+                            <button 
+                                className="action-card"
+                                onClick={() => navigate("/history")}
+                            >
+                                <FiCheckCircle size={32} className="action-icon" />
+                                <div className="action-text">View History</div>
+                            </button>
+                        </Col>
+                    </Row>
                 </div>
             </Container>
-            }
-
-            {scanning &&
-                <div className="d-flex justify-content-center align-items-center" style={{ height: '25vh' }}>
-                    <div id="reader" style={{ width: "250px", height: "250px", overflow: 'hidden'}} />    
-                </div>
-            }
-
-            {scannedCode && <p className="mt-3 text-center">Scanned: <strong>{scannedCode}</strong></p>}
-
-            {!scanning && <div className="d-flex justify-content-center mt-4 pt-4" onClick={() => setScanning(true)}>
-                <button className="btn rounded-circle shadow"
-                    style={{ backgroundColor: '#d6b2d6', padding: '20px', width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                    <i className="bi bi-camera fs-3 text-dark"></i>
-                </button>
-            </div>}
-        </div >
+        </div>
     )
 }

@@ -1,13 +1,16 @@
-import { Card, Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { Card, Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import MyNavbar from '../components/mynavbar'
+import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import '../styles/auth.css';
 
 export default function Login() {
     const refEmail = useRef();
     const refPassword = useRef();
     const [errorMessage, setErrorMessage] = useState();
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate()
 
     // Handles login and sends a POST request to backend
@@ -15,65 +18,133 @@ export default function Login() {
         const email = refEmail.current.value
         const password = refPassword.current.value
 
-        const res = await fetch("/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                email: email,
-                password: password,
-            })
-        })
-        const data = await res.json()
-        if (res.status == 200) {
-            localStorage.setItem("token", data.accessToken)
-            navigate("/home");
+        if (!email || !password) {
+            setErrorMessage("Please fill in all fields")
+            return;
         }
-        else {
-            setErrorMessage(data.error)
+
+        setLoading(true);
+        setErrorMessage(null);
+
+        try {
+            const res = await fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                })
+            })
+            const data = await res.json()
+            if (res.status == 200) {
+                localStorage.setItem("token", data.accessToken)
+                navigate("/home");
+            }
+            else {
+                setErrorMessage(data.error || "Login failed. Please try again.")
+            }
+        } catch (err) {
+            setErrorMessage("Network error. Please try again.")
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
         }
     };
 
     return (
-        <div>
-
+        <div className="auth-container">
             <MyNavbar />
 
-            <Container className="d-flex justify-content-center align-items-center" style={{ height: '90vh' }}>
-                <Card style={{ width: '90%', maxWidth: '400px', borderRadius: '17px', border: '1px solid black' }}>
-                    <Card.Header className="text-center fw-bold border-bottom" style={{ backgroundColor: 'transparent' }}>
-                        Login
-                    </Card.Header>
-                    <Card.Body>
-                        <Form>
-                            <Form.Group controlId="formEmail" className="mb-3">
-                                <Form.Label>Email</Form.Label>
-                                <input ref={refEmail} type="email" className="form-control" id="email" required />
-                            </Form.Group>
+            <Container className="auth-content">
+                <Row className="min-vh-100 d-flex align-items-center justify-content-center">
+                    <Col xs={12} sm={10} md={6} lg={5}>
+                        <div className="auth-card-wrapper">
+                            <div className="auth-header">
+                                <div className="auth-icon">🔐</div>
+                                <h1 className="auth-title">Welcome Back</h1>
+                                <p className="auth-subtitle">Sign in to your AllergenScan account</p>
+                            </div>
 
-                            <Form.Group controlId="formPassword" className="mb-4">
-                                <Form.Label>Password</Form.Label>
-                                <input ref={refPassword} type="password" className="form-control" id="password" required />
-                            </Form.Group>
-                        </Form>
-                        <Button variant="light" className="w-100" onClick={handleLogin} style={{ backgroundColor: '#d6b2d6', border: '1px solid #d6b2d6' }}>
-                            Login
-                        </Button>
-                        <p className="text-center mt-3">
-                            Don't have an account?{" "}
-                            <span
-                                onClick={() => navigate("/signup")}
-                                style={{ color: "#d6b2d6", cursor: "pointer", textDecoration: "underline" }}
-                            >
-                                Sign Up
-                            </span>
-                        </p>
-                        <p className="message text-center mt-4">{errorMessage}</p>
-                    </Card.Body>
-                </Card>
+                            <Card className="auth-card">
+                                <Card.Body>
+                                    {errorMessage && (
+                                        <Alert variant="danger" dismissible onClose={() => setErrorMessage(null)}>
+                                            {errorMessage}
+                                        </Alert>
+                                    )}
+
+                                    <Form>
+                                        <Form.Group controlId="formEmail" className="mb-4">
+                                            <Form.Label className="form-label-custom">Email Address</Form.Label>
+                                            <div className="input-group-custom">
+                                                <FiMail className="input-icon" />
+                                                <input 
+                                                    ref={refEmail} 
+                                                    type="email" 
+                                                    className="form-control input-custom" 
+                                                    placeholder="you@example.com"
+                                                    onKeyPress={handleKeyPress}
+                                                    disabled={loading}
+                                                />
+                                            </div>
+                                        </Form.Group>
+
+                                        <Form.Group controlId="formPassword" className="mb-3">
+                                            <Form.Label className="form-label-custom">Password</Form.Label>
+                                            <div className="input-group-custom">
+                                                <FiLock className="input-icon" />
+                                                <input 
+                                                    ref={refPassword} 
+                                                    type={showPassword ? "text" : "password"} 
+                                                    className="form-control input-custom" 
+                                                    placeholder="••••••••"
+                                                    onKeyPress={handleKeyPress}
+                                                    disabled={loading}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="password-toggle"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                                                </button>
+                                            </div>
+                                        </Form.Group>
+                                    </Form>
+
+                                    <Button 
+                                        className="btn-login w-100 mt-4"
+                                        onClick={handleLogin}
+                                        disabled={loading}
+                                    >
+                                        {loading ? "Signing in..." : "Sign In"}
+                                    </Button>
+
+                                    <div className="auth-divider">
+                                        <span>Don't have an account?</span>
+                                    </div>
+
+                                    <Button 
+                                        className="btn-signup w-100"
+                                        onClick={() => navigate("/signup")}
+                                        disabled={loading}
+                                    >
+                                        Create Account
+                                    </Button>
+                                </Card.Body>
+                            </Card>
+                        </div>
+                    </Col>
+                </Row>
             </Container>
-        </div >
+        </div>
     );
 }

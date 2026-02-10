@@ -131,7 +131,8 @@ server.post("/update_allergens", authenticateToken, async (req, res) => {
 })
 
 server.get("/add/:barcode", authenticateToken, async (req, res) => {
-
+    
+    console.log("Adding product for user:", req.user.id)
     const barcode = req.params.barcode
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("USERS")
@@ -188,13 +189,15 @@ server.get("/add/:barcode", authenticateToken, async (req, res) => {
 
 server.get("/info/:barcode", authenticateToken, async (req, res) => {
 
-    const barcode = Number(req.params.barcode)
+    console.log("Fetching product info for user:", req.user.id)
+    const barcode = req.params.barcode
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("FOOD PRODUCTS")
     const userId = req.user.id
-    const product = await collection.find({ "product_barcode": barcode, for_user: userId }, { projection: { for_user: 0 } }).toArray()
+    const product = await collection.findOne({ "product_barcode": barcode, for_user: userId }, { projection: { for_user: 0 } })
     if (product) {
-        res.status(200).json(product[0])
+        console.log("Found product for user:", userId)
+        res.status(200).json(product)
     }
     else {
         res.status(404).json({ error: "No information about product found" })
@@ -220,7 +223,7 @@ server.get("/history", authenticateToken, async (req, res) => {
     const db = connection.db("ALLERGENIC")
     const collection = db.collection("FOOD PRODUCTS")
     const userId = req.user.id
-    const products = await collection.find({ for_user: userId }, { projection: { product_name: 1, product_barcode: 1, total_allergens: 1, safe: 1 } }).sort({ timestamp: -1 }).toArray()
+    const products = await collection.find({ for_user: new ObjectId(userId) }, { projection: { product_name: 1, product_barcode: 1, total_allergens: 1, safe: 1 } }).sort({ timestamp: -1 }).toArray()
     if (products.length > 0) {
         res.status(200).json(products)
     }
