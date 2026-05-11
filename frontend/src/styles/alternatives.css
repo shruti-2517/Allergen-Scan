@@ -1,0 +1,543 @@
+.alt-container {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.alt-content {
+  flex: 1;
+  padding: 32px 16px 48px;
+  max-width: 1200px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #7c5cff;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 24px;
+  border: none;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.back-link:hover {
+  background: #f5f3ff;
+  transform: translateX(-4px);
+}
+
+.alt-header {
+  margin-bottom: 28px;
+}
+
+.alt-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.alt-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.category-tag {
+  background: #ede9fe;
+  color: #7c5cff;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.alt-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 20px;
+  color: #6b7280;
+}
+
+.alt-empty {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #e5e7eb;
+}
+
+.alt-empty-icon {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.alt-empty p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.btn-back-home {
+  background: linear-gradient(135deg, #7c5cff 0%, #6c4aff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 700;
+}
+
+.btn-back-home:hover {
+  background: linear-gradient(135deg, #6c4aff 0%, #5c3aef 100%);
+}
+
+/* Alt Card */
+.alt-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+  animation: slideUp 0.4s ease-out;
+  height: 100%;
+  cursor: pointer;
+}
+
+.alt-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: #10b981;
+  transform: translateY(-4px);
+}
+
+.alt-image-container {
+  width: 100%;
+  height: 160px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.alt-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.alt-image-placeholder {
+  font-size: 3rem;
+  color: #d1d5db;
+}
+
+.alt-card-body {
+  padding: 16px;
+}
+
+.alt-product-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.alt-barcode {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.alt-barcode code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.alt-safe-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.alt-safe-badge.safe {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.alt-safe-badge.uncertain {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.alt-warning-note {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.alt-ingredients-count {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 576px) {
+  .alt-title {
+    font-size: 1.4rem;
+  }
+
+  .alt-content {
+    padding: 20px 12px 40px;
+  }
+}
+
+.recipe-cta {
+  margin-top: 20px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1.5px solid #ddd6fe;
+  border-radius: 12px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.recipe-cta-text {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.btn-generate-recipe {
+  background: linear-gradient(135deg, #7c5cff 0%, #6c4aff 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(124, 92, 255, 0.35);
+  letter-spacing: 0.3px;
+}
+
+.btn-generate-recipe:hover {
+  background: linear-gradient(135deg, #6c4aff 0%, #5c3aef 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 92, 255, 0.45);
+}
+
+/* ────────────────────────────────────────────
+   Generating state
+──────────────────────────────────────────── */
+.recipe-generating {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.recipe-generating-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.recipe-generating-sub {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* ────────────────────────────────────────────
+   Error state inside no-alt section
+──────────────────────────────────────────── */
+.recipe-error-block {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.recipe-error-msg {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.recipe-card-wrapper {
+  max-width: 780px;
+  margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
+}
+
+.recipe-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #7c5cff, #a78bfa);
+  color: white;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.3);
+  letter-spacing: 0.3px;
+}
+
+.recipe-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1.5px solid #e5e7eb;
+}
+
+/* Card Header */
+.recipe-card-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  padding: 28px 28px 24px;
+  color: white;
+}
+
+.recipe-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 10px;
+  color: white;
+  line-height: 1.3;
+}
+
+.recipe-description {
+  color: #c7d2fe;
+  font-size: 0.95rem;
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+.recipe-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.recipe-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+
+.recipe-meta-icon {
+  font-size: 1.4rem;
+}
+
+.recipe-meta-label {
+  font-size: 0.72rem;
+  color: #a5b4fc;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recipe-meta-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  margin-top: 1px;
+}
+
+/* Card Body */
+.recipe-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.recipe-section {}
+
+.recipe-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+/* Ingredients */
+.recipe-ingredients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.recipe-ingredient-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #374151;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.recipe-ingredient-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c5cff;
+  flex-shrink: 0;
+}
+
+/* Steps */
+.recipe-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recipe-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 0.92rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.recipe-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #7c5cff, #6c4aff);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Allergen Note */
+.recipe-allergen-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1.5px solid #6ee7b7;
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.recipe-allergen-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.recipe-allergen-note p {
+  color: #065f46;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Actions */
+.recipe-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 12px;
+}
+
+.btn-regenerate {
+  background: white;
+  color: #7c5cff;
+  border: 2px solid #7c5cff;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-regenerate:hover {
+  background: #f5f3ff;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .recipe-card-header {
+    padding: 20px 18px;
+  }
+
+  .recipe-name {
+    font-size: 1.3rem;
+  }
+
+  .recipe-body {
+    padding: 20px 18px;
+  }
+
+  .recipe-ingredients-list {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-meta {
+    gap: 10px;
+  }
+}

@@ -14,6 +14,9 @@ import IngredientAnalyzer from './pages/ingredientAnalyzer';
 import Dashboard from './pages/dashboard';
 import Settings from './pages/settings';
 
+import Alternatives from './pages/alternatives';
+import AlternativeDetail from './pages/alternativeDetail';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -29,6 +32,8 @@ root.render(
         <Route path="/analyze" element={<IngredientAnalyzer />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/alternatives/:barcode" element={<Alternatives />} />
+        <Route path="/alternative-detail/:barcode" element={<AlternativeDetail />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

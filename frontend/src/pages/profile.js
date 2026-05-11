@@ -6,7 +6,7 @@ import authFetch from './authFetch.js'
 import { FiUser, FiMail, FiAlertTriangle, FiLogOut } from 'react-icons/fi'
 import '../styles/profile.css'
 
-const ALLERGEN_OPTIONS = ['Peanuts', 'Milk', 'Gluten', 'Soy', 'Eggs', 'Cashew nuts', 'Almonds']
+const ALLERGEN_OPTIONS = ['Peanuts', 'Milk', 'Gluten', 'Soy', 'Eggs', 'Tree Nuts', 'Fish', 'Shellfish', 'Sesame', 'Mustard', 'Celery', 'Sulfites']
 
 export default function Profile() {
     const navigate = useNavigate()
@@ -46,7 +46,7 @@ export default function Profile() {
         setSuccessMessage("");
 
         try {
-            await authFetch('/update_allergens', {
+            await authFetch('/user/update_allergens', {
                 method: 'POST',
                 body: JSON.stringify({ Allergens: allergens })
             })

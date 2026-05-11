@@ -159,7 +159,7 @@ export default function History() {
                                         <div className="stat-item">
                                             <span className="stat-label">Last Scanned</span>
                                             <span className="stat-value">
-                                                {new Date(product.timestamp).toLocaleDateString()}
+                                                {product.timestamp ? new Date(product.timestamp).toLocaleDateString() : 'N/A'}
                                             </span>
                                         </div>
                                     </div>

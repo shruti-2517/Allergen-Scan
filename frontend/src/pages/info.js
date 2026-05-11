@@ -107,14 +107,27 @@ export default function Info() {
                                 </p>
 
                                 {/* Status Badge */}
-                                <div className={`status-banner ${product.safe ? 'safe' : 'unsafe'}`}>
+                                <div className={`status-banner ${product.safe && !product.uncertain ? 'safe' : product.uncertain ? 'uncertain' : 'unsafe'}`}>
                                     <span className="status-icon">
-                                        {product.safe ? '✓' : '⚠'}
+                                        {product.safe && !product.uncertain ? '✓' : product.uncertain ? '?' : '⚠'}
                                     </span>
                                     <span className="status-text">
-                                        {product.safe ? 'Safe for You' : 'Unsafe - Contains Allergens'}
+                                        {product.safe && !product.uncertain
+                                            ? 'Safe for You'
+                                            : product.uncertain
+                                            ? 'Safety Uncertain'
+                                            : 'Unsafe - Contains Allergens'}
                                     </span>
                                 </div>
+
+                                {!product.safe && (
+                                    <Button
+                                        className="btn-alternatives"
+                                        onClick={() => navigate(`/alternatives/${product.product_barcode}`)}
+                                    >
+                                        🔍 Find Safe Alternatives
+                                    </Button>
+                                )}
 
                                 {/* Metadata */}
                                 <div className="product-metadata">
@@ -135,8 +148,55 @@ export default function Info() {
 
                     {/* Allergens and Ingredients */}
                     <Col lg={8}>
-                        {/* Allergens Card */}
-                        <Card className="details-card mb-4">
+                        {/* Trace Warning Card */}
+                        {product.hasTraceWarning && product.traceAllergens?.length > 0 && (
+                            <Card className="details-card mb-4">
+                                <Card.Header className="details-header uncertain-header">
+                                    <div className="header-content">
+                                        <h3 className="details-title">Trace Warning for Your Allergens</h3>
+                                        <span className="allergen-count-badge">{product.traceAllergens.length}</span>
+                                    </div>
+                                </Card.Header>
+                                <Card.Body>
+                                    <p className="uncertain-note">
+                                        This product may contain traces of allergens from your profile due to shared equipment or facilities.
+                                    </p>
+                                    <div className="items-list">
+                                        {product.traceAllergens.map((a, i) => (
+                                            <div key={i} className="list-item uncertain-item">
+                                                <span className="item-text">{a}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        )}
+
+                        {/* Uncertain Ingredients Card */}
+                        {product.uncertain && product.uncertainIngredients?.length > 0 && (
+                            <Card className="details-card mb-4">
+                                <Card.Header className="details-header uncertain-header">
+                                    <div className="header-content">
+                                        <h3 className="details-title">Uncertain Ingredients</h3>
+                                        <span className="allergen-count-badge">{product.uncertainIngredients.length}</span>
+                                    </div>
+                                </Card.Header>
+                                <Card.Body>
+                                    <p className="uncertain-note">
+                                        These vague ingredients may conceal allergens. Check with the manufacturer if unsure.
+                                    </p>
+                                    <div className="items-list">
+                                        {product.uncertainIngredients.map((term, i) => (
+                                            <div key={i} className="list-item uncertain-item">
+                                                <span className="item-text">{term}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card.Body>
+                            </Card>
+                        )}
+
+                        {/* Allergens Card */}                        <Card className="details-card mb-4">
                             <Card.Header className="details-header">
                                 <div className="header-content">
                                     <h3 className="details-title">

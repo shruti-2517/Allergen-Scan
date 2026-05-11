@@ -26,7 +26,8 @@ export default function Dashboard() {
                     const data = await res.json()
                     setStats(data)
                 } else {
-                    setErrorMessage("Failed to load dashboard statistics")
+                    const err = await res.json().catch(() => ({}))
+                    setErrorMessage(`Failed to load dashboard statistics (${res.status}: ${err.error || 'unknown'})`)
                 }
             } catch (err) {
                 setErrorMessage("Error loading dashboard")
@@ -134,7 +135,7 @@ export default function Dashboard() {
 
                 {/* Top Allergens */}
                 <Row>
-                    <Col lg={8}>
+                    <Col>
                         <Card className="insights-card">
                             <Card.Header className="insights-header">
                                 <Card.Title className="mb-0">Most Common Allergens</Card.Title>
@@ -165,48 +166,6 @@ export default function Dashboard() {
                                         <p>No allergen data yet. Start scanning products!</p>
                                     </div>
                                 )}
-                            </Card.Body>
-                        </Card>
-                    </Col>
-
-                    {/* Quick Actions */}
-                    <Col lg={4}>
-                        <Card className="insights-card">
-                            <Card.Header className="insights-header">
-                                <Card.Title className="mb-0">Quick Actions</Card.Title>
-                            </Card.Header>
-                            <Card.Body className="quick-actions-body">
-                                <button
-                                    className="action-btn"
-                                    onClick={() => navigate("/home")}
-                                >
-                                    <span className="action-emoji">🔍</span>
-                                    <span className="action-text">Scan Product</span>
-                                </button>
-
-                                <button
-                                    className="action-btn"
-                                    onClick={() => navigate("/analyze")}
-                                >
-                                    <span className="action-emoji">📷</span>
-                                    <span className="action-text">Analyze Image</span>
-                                </button>
-
-                                <button
-                                    className="action-btn"
-                                    onClick={() => navigate("/history")}
-                                >
-                                    <span className="action-emoji">📋</span>
-                                    <span className="action-text">View History</span>
-                                </button>
-
-                                <button
-                                    className="action-btn"
-                                    onClick={() => navigate("/profile")}
-                                >
-                                    <span className="action-emoji">⚙️</span>
-                                    <span className="action-text">Manage Allergens</span>
-                                </button>
                             </Card.Body>
                         </Card>
                     </Col>

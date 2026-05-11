@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Container, Card, Button, Form, Alert, Spinner, Row, Col } from 'react-bootstrap';
-import { FiCamera, FiUpload, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiCamera, FiUpload, FiCheckCircle, FiAlertCircle, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import MyNavbar from '../components/mynavbar';
 import '../styles/ingredientAnalyzer.css';
@@ -10,9 +10,13 @@ const IngredientAnalyzer = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [draftIngredients, setDraftIngredients] = useState(null);
+  const [extractedText, setExtractedText] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('upload');
+  const [newIngredient, setNewIngredient] = useState('');
+  const [productName, setProductName] = useState('');
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -28,6 +32,8 @@ const IngredientAnalyzer = () => {
       reader.readAsDataURL(file);
       setError(null);
       setAnalysis(null);
+      setDraftIngredients(null);
+      setExtractedText(null);
     }
   };
 
@@ -80,6 +86,7 @@ const IngredientAnalyzer = () => {
     setLoading(true);
     setError(null);
     setAnalysis(null);
+    setDraftIngredients(null);
 
     try {
       const token = localStorage.getItem('token');
@@ -105,10 +112,42 @@ const IngredientAnalyzer = () => {
       if (!response.ok) {
         setError(data.error || 'Failed to analyze image');
       } else {
-        setAnalysis(data);
+        setDraftIngredients(data.ingredients_list);
+        setExtractedText(data.extracted_text);
       }
     } catch (err) {
       setError('Error analyzing image: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmAnalysis = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/confirm-ingredients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ingredients_list: draftIngredients,
+          extracted_text: extractedText,
+          product_name: productName
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Failed to confirm analysis');
+      } else {
+        setAnalysis(data);
+        setDraftIngredients(null);
+      }
+    } catch (err) {
+      setError('Error confirming analysis: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -118,9 +157,23 @@ const IngredientAnalyzer = () => {
     setSelectedFile(null);
     setImagePreview(null);
     setAnalysis(null);
+    setDraftIngredients(null);
+    setExtractedText(null);
+    setProductName('');
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const removeDraftIngredient = (index) => {
+    setDraftIngredients(draftIngredients.filter((_, i) => i !== index));
+  };
+
+  const addDraftIngredient = () => {
+    if (newIngredient.trim()) {
+      setDraftIngredients([...draftIngredients, newIngredient.trim()]);
+      setNewIngredient('');
     }
   };
 
@@ -140,7 +193,7 @@ const IngredientAnalyzer = () => {
             <Card.Body>
               {error && <Alert variant="danger">{error}</Alert>}
 
-              {!analysis ? (
+              {!analysis && !draftIngredients ? (
                 <>
                   {/* Tab Navigation */}
                   <div className="btn-group mb-4 w-100" role="tablist">
@@ -277,16 +330,89 @@ const IngredientAnalyzer = () => {
                             size="sm"
                             className="me-2"
                           />
-                          Analyzing...
+                          Extracting Text...
                         </>
                       ) : (
-                        'Analyze Ingredients'
+                        'Extract Ingredients'
                       )}
                     </Button>
                   )}
                 </>
+              ) : draftIngredients && !analysis ? (
+                /* Draft Review Results */
+                <div className="draft-review">
+                  <Alert variant="info">
+                    Please review the extracted ingredients below. You can add missing ones or remove incorrect ones before final analysis.
+                  </Alert>
+                  
+                  {extractedText && (
+                    <div className="mb-4">
+                      <h6 className="mb-2">Extracted Raw Text:</h6>
+                      <div className="extracted-text p-3 bg-light rounded" style={{maxHeight:'150px', overflowY:'auto'}}>
+                        <small className="text-muted">
+                          {extractedText}
+                        </small>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4 p-3 bg-white border rounded shadow-sm">
+                    <Form.Group>
+                      <Form.Label><strong>Product Name (Optional)</strong></Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        value={productName}
+                        onChange={(e) => setProductName(e.target.value)}
+                        placeholder="e.g. Maggi Masala Noodles"
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="mb-3 p-3 bg-white border rounded shadow-sm">
+                    <h6 className="mb-3">Identified Ingredients:</h6>
+                    {draftIngredients.length === 0 ? (
+                      <p className="text-muted">No ingredients were recognized. Please add them manually below.</p>
+                    ) : (
+                      <div className="allergen-tags mb-3">
+                        {draftIngredients.map((ing, idx) => (
+                          <span key={idx} className="badge bg-secondary me-2 mb-2 p-2 align-items-center" style={{fontSize: '0.9rem'}}>
+                            {ing} 
+                            <FiX 
+                              style={{cursor:'pointer', marginLeft:'8px'}} 
+                              onClick={() => removeDraftIngredient(idx)}
+                              title="Remove ingredient"
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="d-flex mt-3 pt-3 border-top">
+                      <Form.Control 
+                        type="text" 
+                        value={newIngredient} 
+                        onChange={(e) => setNewIngredient(e.target.value)} 
+                        placeholder="Type to add a missing ingredient..." 
+                        onKeyPress={(e) => e.key === 'Enter' && addDraftIngredient()}
+                      />
+                      <Button variant="outline-primary" className="ms-2 px-4" onClick={addDraftIngredient}>Add</Button>
+                    </div>
+                  </div>
+
+                  <div className="d-grid gap-2 mt-4">
+                    <Button variant="success" size="lg" onClick={confirmAnalysis} disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Analyzing...
+                        </>
+                      ) : 'Confirm & Analyze Safety'}
+                    </Button>
+                    <Button variant="outline-secondary" onClick={resetForm} disabled={loading}>Start Over</Button>
+                  </div>
+                </div>
               ) : (
-                /* Analysis Results */
+                /* Final Analysis Results */
                 <div className="analysis-results">
                   <Alert variant={analysis.safe ? 'success' : 'warning'}>
                     <strong>
@@ -325,15 +451,6 @@ const IngredientAnalyzer = () => {
                       </div>
                     </div>
                   )}
-
-                  <div className="mb-4">
-                    <h6 className="mb-2">Extracted Text:</h6>
-                    <div className="extracted-text p-3 bg-light rounded">
-                      <small className="text-muted">
-                        {analysis.extracted_text}
-                      </small>
-                    </div>
-                  </div>
 
                   <div className="d-grid gap-2">
                     <Button variant="primary" onClick={resetForm}>
