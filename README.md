@@ -1,4 +1,4 @@
-# AllergenScan – Smart Allergen Detection Web App
+# AllergenAware – Smart Allergen Detection Web App
 
 AllergenScan is a MERN stack web application that helps users **scan food product barcodes**, **identify allergens** in ingredients, and **track personal food safety**. Users can sign up, select allergens, scan products, and receive instant feedback on whether a product is safe for them to consume.
 
