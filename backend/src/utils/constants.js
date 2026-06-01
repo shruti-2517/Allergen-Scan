@@ -46,6 +46,7 @@ const COLLECTIONS = {
   REFRESH_TOKENS: "REFRESH TOKENS",
   DASHBOARD: "DASHBOARD",
   PRODUCT_CACHE: "PRODUCT_CACHE",
+  INGREDIENT_ANALYSES: "INGREDIENT_ANALYSES",
 };
 
 // Vague ingredient terms that may conceal allergens — triggers "safety uncertain"

@@ -20,8 +20,9 @@ export default function History() {
         try {
             const res = await authFetch('/history')
             const data = await res.json()
-            setProducts(data || [])
-            setFilteredProducts(data || [])
+            const historyItems = Array.isArray(data) ? data : data.data || []
+            setProducts(historyItems)
+            setFilteredProducts(historyItems)
         } catch (err) {
             setErrorMessage("Failed to load history. Please try again.")
         } finally {

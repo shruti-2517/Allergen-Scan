@@ -34,7 +34,7 @@ export default function Settings() {
 
     const handleDeleteAccount = () => {
         // Implement account deletion logic
-        localStorage.removeItem("token")
+        sessionStorage.removeItem("accessToken")
         navigate("/login")
     }
 

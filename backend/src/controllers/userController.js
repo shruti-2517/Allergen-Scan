@@ -40,10 +40,11 @@ const updateAllergens = async (req, res) => {
 
     const db = getDatabase(DB_NAMES.ALLERGENIC);
     const usersCollection = db.collection(COLLECTIONS.USERS);
+    const sanitizedAllergens = Allergens.map((item) => item.trim());
 
     const result = await usersCollection.updateOne(
       { _id: new ObjectId(userId) },
-      { $set: { allergens: Allergens, updatedAt: new Date() } }
+      { $set: { allergens: sanitizedAllergens, updatedAt: new Date() } }
     );
 
     if (result.matchedCount === 0) {

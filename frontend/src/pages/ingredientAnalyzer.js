@@ -3,6 +3,7 @@ import { Container, Card, Button, Form, Alert, Spinner, Row, Col } from 'react-b
 import { FiCamera, FiUpload, FiCheckCircle, FiAlertCircle, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import MyNavbar from '../components/mynavbar';
+import authFetch from './authFetch.js';
 import '../styles/ingredientAnalyzer.css';
 
 const IngredientAnalyzer = () => {
@@ -89,8 +90,7 @@ const IngredientAnalyzer = () => {
     setDraftIngredients(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      if (!sessionStorage.getItem('accessToken')) {
         setError('Not authenticated. Please log in.');
         setLoading(false);
         return;
@@ -99,11 +99,8 @@ const IngredientAnalyzer = () => {
       const formData = new FormData();
       formData.append('image', selectedFile);
 
-      const response = await fetch('/analyze-ingredients', {
+      const response = await authFetch('/analyze-ingredients', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       });
 
@@ -126,13 +123,8 @@ const IngredientAnalyzer = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/confirm-ingredients', {
+      const response = await authFetch('/confirm-ingredients', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           ingredients_list: draftIngredients,
           extracted_text: extractedText,

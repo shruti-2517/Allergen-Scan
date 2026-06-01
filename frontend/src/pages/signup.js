@@ -25,8 +25,18 @@ export default function SignUp() {
             return;
         }
 
-        if (password.length < 6) {
-            setErrorMessage("Password must be at least 6 characters")
+        if (password.length < 8) {
+            setErrorMessage("Password must be at least 8 characters")
+            return;
+        }
+
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
+            setErrorMessage("Password must contain uppercase, lowercase, number, and special character")
+            return;
+        }
+
+        if (!email.includes('@')) {
+            setErrorMessage("Please enter a valid email")
             return;
         }
 
@@ -34,7 +44,7 @@ export default function SignUp() {
         setErrorMessage(null);
 
         try {
-            const res = await fetch("/signup", {
+            const res = await fetch("/auth/signup", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -46,10 +56,10 @@ export default function SignUp() {
                 })
             })
             const data = await res.json()
-            if (res.status == 200) {
-                navigate("/profile")
+            if (res.status == 201) {
+                navigate("/login")
             } else {
-                setErrorMessage(data.message || "Sign up failed. Please try again.")
+                setErrorMessage(data.error || "Sign up failed. Please try again.")
             }
         } catch (err) {
             setErrorMessage("Network error. Please try again.")

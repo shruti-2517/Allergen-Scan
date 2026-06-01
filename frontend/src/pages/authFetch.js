@@ -1,12 +1,13 @@
 
 export default async function authFetch(url, options = {}, retry = true) {
 
-    const accessToken = localStorage.getItem("token")
+    const accessToken = sessionStorage.getItem("accessToken")
+    const isFormData = options.body instanceof FormData
 
     options.headers = {
         ...options.headers,
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
+        ...(!isFormData && { "Content-Type": "application/json" }),
+        ...(accessToken && { "Authorization": `Bearer ${accessToken}` }),
     };
 
     options.credentials = options.credentials || 'include'
@@ -14,7 +15,7 @@ export default async function authFetch(url, options = {}, retry = true) {
     const res = await fetch(url, options)
 
     if ((res.status === 401 || res.status === 403) && retry) {
-        const tokenRes = await fetch('/token', {
+        const tokenRes = await fetch('/auth/token', {
             method: 'POST',
             headers: { "Content-Type": "application/json" },
             credentials: 'include'
@@ -22,13 +23,15 @@ export default async function authFetch(url, options = {}, retry = true) {
 
         if (tokenRes.status === 200) {
             const tokenData = await tokenRes.json()
-            localStorage.setItem("token", tokenData.accessToken)
+            sessionStorage.setItem("accessToken", tokenData.accessToken)
             return authFetch(url, options, false)
         } 
         else {
+            sessionStorage.removeItem("accessToken")
             window.location.href = "/login"
         }
     }
 
     return res;
 }
+

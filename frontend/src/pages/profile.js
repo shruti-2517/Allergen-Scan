@@ -77,8 +77,13 @@ export default function Profile() {
         setAllergens(allergens.filter(a => a !== item))
     }
 
-    function handleLogout() {
-        localStorage.removeItem("token")
+    async function handleLogout() {
+        try {
+            await authFetch('/auth/logout', { method: 'POST' })
+        } catch (err) {
+            // Local cleanup still logs the user out if the server is unreachable.
+        }
+        sessionStorage.removeItem("accessToken")
         navigate("/login")
     }
 

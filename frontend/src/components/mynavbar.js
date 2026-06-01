@@ -11,7 +11,7 @@ export default function MyNavbar() {
     const [showSettings, setShowSettings] = useState(false);
     const menuRef = useRef(null);
     const hideAuthButton = location.pathname === '/login' || location.pathname === '/signup';
-    const isLoggedIn = !!localStorage.getItem("token");
+    const isLoggedIn = !!sessionStorage.getItem("accessToken");
 
     // Close menu on route change
     useEffect(() => { setShowMenu(false); }, [location.pathname]);

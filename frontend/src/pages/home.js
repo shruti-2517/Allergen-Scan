@@ -57,7 +57,7 @@ export default function Home() {
                         async (decodedText, decodedResult) => {
                             await html5QrCode.stop()
                             setScanning(false)
-                            const res = await authFetch(`/add/${decodedText}`)
+                            const res = await authFetch(`/add/${decodedText}`, { method: 'POST' })
                             const data = await res.json()
                             if (res.status == 200) {
                                 navigate(`/info/${decodedText}`)

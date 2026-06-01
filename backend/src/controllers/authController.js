@@ -1,42 +1,28 @@
-const bcrypt = require("bcrypt");
-const { ObjectId } = require("mongodb");
-const { getDatabase } = require("../config/database");
-const {
-  generateAccessToken,
-  generateRefreshToken,
-} = require("../utils/tokenUtils");
-const { COLLECTIONS, DB_NAMES } = require("../utils/constants");
+const authService = require("../services/authService");
+const logger = require("../utils/logger");
+
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "Strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Please enter all details" });
-    }
-
-    const db = getDatabase(DB_NAMES.ALLERGENIC);
-    const usersCollection = db.collection(COLLECTIONS.USERS);
-
-    const existingUser = await usersCollection.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await usersCollection.insertOne({
-      name,
-      email,
-      password: hashedPassword,
-      createdAt: new Date(),
+    const user = await authService.signup(name, email, password);
+    res.status(201).json({
+      message: "User created successfully",
+      user,
     });
-
-    return res
-      .status(201)
-      .json({ message: "User created successfully" });
   } catch (error) {
-    console.error("Signup error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    logger.error("Signup error", error);
+    if (error.message === "User already exists") {
+      return res.status(409).json({ error: error.message });
+    }
+    res.status(500).json({ error: "Failed to create user" });
   }
 };
 
@@ -44,47 +30,17 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
+    const result = await authService.login(email, password);
+    
+    res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
 
-    const db = getDatabase(DB_NAMES.ALLERGENIC);
-    const usersCollection = db.collection(COLLECTIONS.USERS);
-    const tokensCollection = db.collection(COLLECTIONS.REFRESH_TOKENS);
-
-    const user = await usersCollection.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (!isPasswordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const userData = { id: user._id };
-    const accessToken = generateAccessToken(userData);
-    const refreshToken = generateRefreshToken(userData);
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    res.status(200).json({
+      accessToken: result.accessToken,
+      user: result.user,
     });
-
-    await tokensCollection.insertOne({
-      token: refreshToken,
-      userId: user._id,
-      createdAt: new Date(),
-    });
-
-    tokensCollection.createIndex({ createdAt: 1 }, { expireAfterSeconds: 604800 });
-
-    return res.status(200).json({ accessToken });
   } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    logger.error("Login error", error);
+    res.status(401).json({ error: "Invalid credentials" });
   }
 };
 
@@ -96,46 +52,34 @@ const token = async (req, res) => {
       return res.status(401).json({ error: "Refresh token not provided" });
     }
 
-    const db = getDatabase(DB_NAMES.ALLERGENIC);
-    const tokensCollection = db.collection(COLLECTIONS.REFRESH_TOKENS);
-
-    const tokenExists = await tokensCollection.findOne({ token: refreshToken });
-    if (!tokenExists) {
-      return res.status(403).json({ error: "Invalid refresh token" });
-    }
-
-    const jwt = require("jsonwebtoken");
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        return res.status(403).json({ error: "Token verification failed" });
-      }
-
-      const accessToken = generateAccessToken({ id: user.id });
-      return res.status(200).json({ accessToken });
-    });
+    const result = await authService.refreshAccessToken(refreshToken);
+    res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
+    res.status(200).json({ accessToken: result.accessToken });
   } catch (error) {
-    console.error("Token refresh error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    logger.error("Token refresh error", error);
+    res.status(403).json({ error: "Invalid or expired refresh token" });
   }
 };
 
 const logout = async (req, res) => {
   try {
-    const { token: refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      return res.status(400).json({ error: "Refresh token is required" });
+      return res.status(400).json({ error: "No active session" });
     }
 
-    const db = getDatabase(DB_NAMES.ALLERGENIC);
-    const tokensCollection = db.collection(COLLECTIONS.REFRESH_TOKENS);
+    await authService.logout(refreshToken);
 
-    await tokensCollection.deleteOne({ token: refreshToken });
-
-    return res.status(200).json({ message: "Logged out successfully" });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+    });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error("Logout error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    logger.error("Logout error", error);
+    res.status(500).json({ error: "Failed to logout" });
   }
 };
 

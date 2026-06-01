@@ -27,7 +27,7 @@ export default function Login() {
         setErrorMessage(null);
 
         try {
-            const res = await fetch("/login", {
+            const res = await fetch("/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -40,7 +40,7 @@ export default function Login() {
             })
             const data = await res.json()
             if (res.status == 200) {
-                localStorage.setItem("token", data.accessToken)
+                sessionStorage.setItem("accessToken", data.accessToken)
                 navigate("/home");
             }
             else {

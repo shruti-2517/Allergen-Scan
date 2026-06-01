@@ -1,4 +1,6 @@
 const { MongoClient } = require("mongodb");
+const { createIndexes } = require("./indexes");
+const logger = require("../utils/logger");
 
 let mongoConnection = null;
 
@@ -7,7 +9,10 @@ const initializeDatabase = async () => {
 
   mongoConnection = new MongoClient(process.env.CONNECTION_STRING_MONGO);
   await mongoConnection.connect();
-  console.log("Database connected successfully");
+  logger.info("Database connected successfully");
+
+  const db = mongoConnection.db("ALLERGENIC");
+  await createIndexes(db);
 
   return mongoConnection;
 };
@@ -23,7 +28,7 @@ const closeDatabase = async () => {
   if (mongoConnection) {
     await mongoConnection.close();
     mongoConnection = null;
-    console.log("Database connection closed");
+    logger.info("Database connection closed");
   }
 };
 

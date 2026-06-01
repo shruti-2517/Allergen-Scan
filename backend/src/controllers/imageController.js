@@ -69,6 +69,33 @@ const runHeuristics = (extractedText) => {
   return deduplicatedIngredients;
 };
 
+const isSupportedImage = (filePath) => {
+  const header = Buffer.alloc(12);
+  const fd = fs.openSync(filePath, "r");
+
+  try {
+    fs.readSync(fd, header, 0, header.length, 0);
+  } finally {
+    fs.closeSync(fd);
+  }
+
+  const isJpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+  const isPng = header.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const isWebp =
+    header.slice(0, 4).toString("ascii") === "RIFF" &&
+    header.slice(8, 12).toString("ascii") === "WEBP";
+
+  return isJpeg || isPng || isWebp;
+};
+
+const cleanTextList = (items, maxItems = 100) => {
+  return items
+    .filter((item) => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, maxItems);
+};
+
 const analyzeIngredientImage = async (req, res) => {
   let filePath = null;
 
@@ -79,6 +106,10 @@ const analyzeIngredientImage = async (req, res) => {
 
     filePath = req.file.path;
     const userId = req.user.id;
+
+    if (!isSupportedImage(filePath)) {
+      return res.status(400).json({ error: "Unsupported or invalid image file" });
+    }
 
     console.log(`Processing ingredient image for user ${userId} using Tesseract.js`);
 
@@ -125,9 +156,7 @@ const analyzeIngredientImage = async (req, res) => {
 
         finalIngredients = JSON.parse(rawOutput);
 
-        if (!Array.isArray(finalIngredients)) {
-          finalIngredients = [];
-        }
+        finalIngredients = Array.isArray(finalIngredients) ? cleanTextList(finalIngredients) : [];
       } catch (llmError) {
         console.error("Gemini API error:", llmError.message);
         finalIngredients = runHeuristics(extractedText);
@@ -141,7 +170,7 @@ const analyzeIngredientImage = async (req, res) => {
     return res.status(200).json({
       message: "Image processed, waiting for user confirmation",
       extracted_text: extractedText,
-      ingredients_list: finalIngredients,
+      ingredients_list: cleanTextList(finalIngredients),
     });
   } catch (error) {
     console.error("Analyze ingredient image error:", error);
@@ -150,7 +179,7 @@ const analyzeIngredientImage = async (req, res) => {
     // Clean up uploaded file
     if (filePath && fs.existsSync(filePath)) {
       try {
-        fs.unlinkSync(filePath);
+        await fs.promises.unlink(filePath);
       } catch (err) {
         console.error("Error deleting file:", err);
       }
@@ -176,21 +205,26 @@ const confirmIngredientAnalysis = async (req, res) => {
     }
 
     const userAllergens = user.allergens || [];
-    const foundAllergens = findUserAllergens(userAllergens, ingredients_list);
+    const safeIngredientsList = cleanTextList(ingredients_list);
+    const foundAllergens = findUserAllergens(userAllergens, safeIngredientsList);
 
     const analysis = {
-      product_name: product_name || "Unknown Product",
-      extracted_text: extracted_text || "User Confirmed List",
-      ingredients_list: ingredients_list,
+      product_name: typeof product_name === "string" && product_name.trim()
+        ? product_name.trim()
+        : "Unknown Product",
+      extracted_text: typeof extracted_text === "string"
+        ? extracted_text.slice(0, 5000)
+        : "User Confirmed List",
+      ingredients_list: safeIngredientsList,
       found_allergens: foundAllergens,
-      total_ingredients: ingredients_list.length,
+      total_ingredients: safeIngredientsList.length,
       total_allergens: foundAllergens.length,
       safe: foundAllergens.length === 0,
       timestamp: new Date(),
     };
 
     // Save analysis to database
-    const analysisCollection = db.collection("INGREDIENT_ANALYSES");
+    const analysisCollection = db.collection(COLLECTIONS.INGREDIENT_ANALYSES);
     const result = await analysisCollection.insertOne({
       for_user: new ObjectId(userId),
       ...analysis,

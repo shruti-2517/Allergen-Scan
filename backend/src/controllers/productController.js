@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const { getDatabase } = require("../config/database");
 const { COLLECTIONS, DB_NAMES } = require("../utils/constants");
+const logger = require("../utils/logger");
 const {
   fetchOpenFoodFactsJson,
   fetchProductFromOpenFoodFacts,
@@ -176,31 +177,52 @@ const getRecentProducts = async (req, res) => {
 const getProductHistory = async (req, res) => {
   try {
     const userId = req.user.id;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
     const db = getDatabase(DB_NAMES.ALLERGENIC);
     const productsCollection = db.collection(COLLECTIONS.FOOD_PRODUCTS);
 
+    const userIdObj = new ObjectId(userId);
+    const total = await productsCollection.countDocuments({
+      for_user: userIdObj,
+    });
+
     const products = await productsCollection
-      .find({ for_user: new ObjectId(userId) }, {
-        projection: {
-          product_name: 1,
-          product_barcode: 1,
-          total_allergens: 1,
-          safe: 1,
-          timestamp: 1,
-        },
-      })
+      .find(
+        { for_user: userIdObj },
+        {
+          projection: {
+            product_name: 1,
+            product_barcode: 1,
+            total_allergens: 1,
+            safe: 1,
+            timestamp: 1,
+          },
+        }
+      )
       .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
       .toArray();
 
     if (products.length === 0) {
       return res.status(404).json({ error: "No products found" });
     }
 
-    return res.status(200).json(products);
+    return res.status(200).json({
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    console.error("Get product history error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    logger.error("Get product history error", error);
+    return res.status(500).json({ error: "Failed to retrieve product history" });
   }
 };
 
@@ -398,12 +420,13 @@ const getAlternatives = async (req, res) => {
     const db = getDatabase(DB_NAMES.ALLERGENIC);
     const usersCollection = db.collection(COLLECTIONS.USERS);
     const productsCollection = db.collection(COLLECTIONS.FOOD_PRODUCTS);
+    const userIdObj = new ObjectId(userId);
 
-    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    const user = await usersCollection.findOne({ _id: userIdObj });
     const userAllergens = user?.allergens || [];
 
     let origProduct = await productsCollection.findOne(
-      { product_barcode: barcode },
+      { product_barcode: barcode, for_user: userIdObj },
       { projection: { product_name: 1, category_tags: 1, categories_tags: 1 } }
     );
 
@@ -420,7 +443,7 @@ const getAlternatives = async (req, res) => {
 
       if (categories.length > 0) {
         await productsCollection.updateMany(
-          { product_barcode: barcode },
+          { product_barcode: barcode, for_user: userIdObj },
           {
             $set: {
               category_tags: categories,
@@ -572,10 +595,11 @@ const getDashboardStats = async (req, res) => {
   try {
     const userId = req.user.id;
     const db = getDatabase(DB_NAMES.ALLERGENIC);
+    const userIdObj = new ObjectId(userId);
     
     // 1. Get user and their current allergens
     const usersCollection = db.collection(COLLECTIONS.USERS);
-    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    const user = await usersCollection.findOne({ _id: userIdObj });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -583,14 +607,20 @@ const getDashboardStats = async (req, res) => {
 
     // 2. Fetch all regular barcode scans
     const productsCollection = db.collection(COLLECTIONS.FOOD_PRODUCTS);
-    const barcodeScans = await productsCollection.find({ for_user: new ObjectId(userId) }).toArray();
+    const barcodeScans = productsCollection.find(
+      { for_user: userIdObj },
+      { projection: { ingredients_tags: 1 } }
+    );
 
-    // 3. Fetch all OCR scans
-    const analysisCollection = db.collection("INGREDIENT_ANALYSES");
-    const ocrScans = await analysisCollection.find({ for_user: new ObjectId(userId) }).toArray();
+    // 3. Fetch OCR scans with only the fields needed for stats
+    const analysisCollection = db.collection(COLLECTIONS.INGREDIENT_ANALYSES);
+    const ocrScans = analysisCollection.find(
+      { for_user: userIdObj },
+      { projection: { ingredients_list: 1 } }
+    );
 
     // 4. Compute stats dynamically
-    let totalScans = barcodeScans.length + ocrScans.length;
+    let totalScans = 0;
     let safeProducts = 0;
     let unsafeProducts = 0;
     let allergenCountsMap = {};
@@ -608,8 +638,15 @@ const getDashboardStats = async (req, res) => {
       }
     };
 
-    barcodeScans.forEach(scan => processItem(scan.ingredients_tags || []));
-    ocrScans.forEach(scan => processItem(scan.ingredients_list || []));
+    for await (const scan of barcodeScans) {
+      totalScans++;
+      processItem(scan.ingredients_tags || []);
+    }
+
+    for await (const scan of ocrScans) {
+      totalScans++;
+      processItem(scan.ingredients_list || []);
+    }
 
     // Convert allergenCounts map to sorted array
     const topAllergens = Object.entries(allergenCountsMap)

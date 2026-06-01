@@ -61,35 +61,40 @@ const parseIngredientText = (text) => {
 };
 
 const findUserAllergens = (userAllergens, ingredientsList) => {
-  /**
-   * Find allergens in ingredient list
-   * Handles both array of ingredients and raw text
-   */
   const normalizedIngredients = Array.isArray(ingredientsList)
     ? ingredientsList.map((ing) => ing.toLowerCase())
     : parseIngredientText(ingredientsList);
 
-  const foundAllergensSet = new Set();
+  const ingredientsSet = new Set(normalizedIngredients);
+  const foundAllergens = [];
 
   for (const allergen of userAllergens) {
-    const keywords = ALLERGEN_SYNONYMS[allergen.toLowerCase()] || [
-      allergen.toLowerCase(),
-    ];
-    if (
-      keywords.some((word) =>
-        normalizedIngredients.some((ing) =>
-          ing.includes(word) || word.includes(ing)
-        )
-      )
-    ) {
-      foundAllergensSet.add(allergen);
+    const allergenLower = allergen.toLowerCase();
+    const keywords = ALLERGEN_SYNONYMS[allergenLower] || [allergenLower];
+
+    let found = false;
+    for (const keyword of keywords) {
+      if (ingredientsSet.has(keyword)) {
+        found = true;
+        break;
+      }
+      for (const ingredient of normalizedIngredients) {
+        if (ingredient.includes(keyword) || keyword.includes(ingredient)) {
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+
+    if (found) {
+      foundAllergens.push(allergen);
     }
   }
 
-  return Array.from(foundAllergensSet);
+  return foundAllergens;
 };
 
-// Phrases in free text that indicate trace/cross-contamination warnings
 const TRACE_PATTERNS = [
   /may contain(?: traces? of)?/i,
   /might contain/i,
@@ -102,45 +107,51 @@ const TRACE_PATTERNS = [
   /traces? of/i,
 ];
 
-/**
- * Detect trace/cross-contamination warnings in ingredients text and traces_tags.
- * Returns { hasTraceWarning, traceAllergens } where traceAllergens are user allergens
- * mentioned near a trace warning phrase.
- */
 const checkTraceWarnings = (ingredientsText, tracesTags, userAllergens) => {
   const text = (ingredientsText || "").toLowerCase();
   const traceTags = (tracesTags || []).map((t) => t.replace("en:", "").toLowerCase());
+  const tagsSet = new Set(traceTags);
 
-  // Check if any trace pattern appears in the free text
-  const hasTracePhrase = TRACE_PATTERNS.some((re) => re.test(text));
-  const hasTraceTags = traceTags.length > 0;
-
-  // Find which user allergens are mentioned in traces_tags
-  const traceAllergensFromTags = [];
-  for (const allergen of userAllergens) {
-    const keywords = ALLERGEN_SYNONYMS[allergen.toLowerCase()] || [allergen.toLowerCase()];
-    if (keywords.some((kw) => traceTags.some((tag) => tag.includes(kw)))) {
-      traceAllergensFromTags.push(allergen);
+  let hasTracePhrase = false;
+  for (const pattern of TRACE_PATTERNS) {
+    if (pattern.test(text)) {
+      hasTracePhrase = true;
+      break;
     }
   }
 
-  // Find user allergens mentioned in the free text near a trace phrase
-  const traceAllergensFromText = [];
-  if (hasTracePhrase) {
-    for (const allergen of userAllergens) {
-      const keywords = ALLERGEN_SYNONYMS[allergen.toLowerCase()] || [allergen.toLowerCase()];
-      if (keywords.some((kw) => text.includes(kw))) {
-        traceAllergensFromText.push(allergen);
+  const traceAllergens = [];
+  const seenAllergens = new Set();
+
+  for (const allergen of userAllergens) {
+    if (seenAllergens.has(allergen)) continue;
+
+    const allergenLower = allergen.toLowerCase();
+    const keywords = ALLERGEN_SYNONYMS[allergenLower] || [allergenLower];
+
+    let isTraceAllergen = false;
+
+    for (const keyword of keywords) {
+      if (tagsSet.has(keyword) || traceTags.some((tag) => tag.includes(keyword))) {
+        isTraceAllergen = true;
+        break;
+      }
+
+      if (hasTracePhrase && text.includes(keyword)) {
+        isTraceAllergen = true;
+        break;
       }
     }
-  }
 
-  // Merge both sources, deduplicate
-  const traceAllergens = [...new Set([...traceAllergensFromTags, ...traceAllergensFromText])];
+    if (isTraceAllergen) {
+      traceAllergens.push(allergen);
+      seenAllergens.add(allergen);
+    }
+  }
 
   return {
     hasTraceWarning: traceAllergens.length > 0,
-    hasAnyTraceWarning: hasTracePhrase || hasTraceTags,
+    hasAnyTraceWarning: hasTracePhrase || traceTags.length > 0,
     hasSpecificTraceMatch: traceAllergens.length > 0,
     traceAllergens,
   };
